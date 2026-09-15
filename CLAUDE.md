@@ -27,7 +27,7 @@ New code is grouped by feature/domain under `com.dentalwhisper.backend.<feature>
 ## Config
 
 - `server.port` — `${PORT:8080}`. Railway injects `PORT` at runtime and routes traffic to whatever the app listens on; the `8080` fallback is for local dev only.
-- CORS allowed origin — `app.cors.allowed-origins=${CORS_ALLOWED_ORIGINS:http://localhost:4200}`. On Railway, set `CORS_ALLOWED_ORIGINS=https://mywhisper.drmilkin.workers.dev` (the live frontend's origin, no trailing slash) — see `Angular_Frontend/CLAUDE.md`. A single origin string only; this isn't parsed as a list.
+- CORS allowed origins — `app.cors.allowed-origins`, a comma-separated list bound to `WebConfig.allowedOrigins` (`String[]`, not a single `String`). Defaults to `http://localhost:4200,https://mywhisper.drmilkin.workers.dev` — both dev and the live frontend work with **no env var needed on Railway**. The origin isn't a secret, so it's fine committed as a real default rather than requiring dashboard setup; `CORS_ALLOWED_ORIGINS` still exists as an override for a one-off/staging origin if ever needed.
 - `openai.api-key` — read from the `OPENAI_API_KEY` env var (`${OPENAI_API_KEY:}` in `application.properties`). Never hardcode or commit a real key.
 - `openai.realtime.model` — defaults to `gpt-realtime-mini` (cheaper; start here for command-and-control style tool calls, per the voice assistant architecture doc)
 - `spring.ai.mcp.server.*` — `name`/`version` (server identity), `protocol=STREAMABLE`, `type=SYNC`, `annotation-scanner.enabled=true` (required for `@McpTool` methods to be picked up)

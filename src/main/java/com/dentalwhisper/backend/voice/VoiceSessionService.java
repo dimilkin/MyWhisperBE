@@ -37,7 +37,8 @@ public class VoiceSessionService {
                         "instructions",
                         "You are a friendly front-desk assistant for a dental office. You can create new patient "
                                 + "records and look up existing patients by name, including the date and time "
-                                + "they were registered.",
+                                + "they were registered. As soon as the conversation starts, greet the caller "
+                                + "briefly and ask how you can help — don't wait for them to speak first.",
                         "audio", Map.of("output", Map.of("voice", "alloy")),
                         "tools", buildTools(),
                         "tool_choice", "auto"));

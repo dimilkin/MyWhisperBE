@@ -2,12 +2,16 @@ package com.dentalwhisper.backend.patient;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.mcp.annotation.McpTool;
 import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PatientMcpTools {
+
+    private static final Logger log = LoggerFactory.getLogger(PatientMcpTools.class);
 
     private final PatientService patientService;
 
@@ -28,7 +32,9 @@ public class PatientMcpTools {
     public Patient createPatient(
             @McpToolParam(description = "Patient's first name", required = true) String firstName,
             @McpToolParam(description = "Patient's last name", required = true) String lastName) {
-        return patientService.addPatient(new PatientRequest(firstName, lastName));
+        Patient patient = patientService.addPatient(new PatientRequest(firstName, lastName));
+        log.info("MCP tool call create_patient: firstName={}, lastName={}, id={}", firstName, lastName, patient.id());
+        return patient;
     }
 
     @McpTool(
@@ -44,6 +50,8 @@ public class PatientMcpTools {
                     openWorldHint = false))
     public List<Patient> getPatientByName(
             @McpToolParam(description = "Full or partial patient name to search for", required = true) String name) {
-        return patientService.findByName(name);
+        List<Patient> results = patientService.findByName(name);
+        log.info("MCP tool call get_patient_by_name: name={}, results={}", name, results.size());
+        return results;
     }
 }
