@@ -26,12 +26,19 @@ New code is grouped by feature/domain under `com.dentalwhisper.backend.<feature>
 
 ## Config
 
-- `server.port=8080`
-- CORS allowed origin: `http://localhost:4200`, set via `app.cors.allowed-origins` in `application.properties`
+- `server.port` — `${PORT:8080}`. Railway injects `PORT` at runtime and routes traffic to whatever the app listens on; the `8080` fallback is for local dev only.
+- CORS allowed origin — `app.cors.allowed-origins=${CORS_ALLOWED_ORIGINS:http://localhost:4200}`. Set `CORS_ALLOWED_ORIGINS` (on Railway) to the deployed Cloudflare Workers frontend's origin, e.g. `https://dentalwhisper-frontend.<subdomain>.workers.dev` — see `Angular_Frontend/CLAUDE.md`. A single origin string only; this isn't parsed as a list.
 - `openai.api-key` — read from the `OPENAI_API_KEY` env var (`${OPENAI_API_KEY:}` in `application.properties`). Never hardcode or commit a real key.
 - `openai.realtime.model` — defaults to `gpt-realtime-mini` (cheaper; start here for command-and-control style tool calls, per the voice assistant architecture doc)
 - `spring.ai.mcp.server.*` — `name`/`version` (server identity), `protocol=STREAMABLE`, `type=SYNC`, `annotation-scanner.enabled=true` (required for `@McpTool` methods to be picked up)
-- `mcp.server.public-url` — from the `MCP_SERVER_PUBLIC_URL` env var, e.g. an ngrok/Cloudflare Tunnel URL pointed at `localhost:8080`. `VoiceSessionService` appends `/mcp` and only includes the MCP tool in the session config when this is set (so a session can still be started without it, just without patient tools). **Changes every time a free-tier tunnel restarts** — update the env var each dev session.
+- `mcp.server.public-url` — from the `MCP_SERVER_PUBLIC_URL` env var. Locally, an ngrok/Cloudflare Tunnel URL pointed at `localhost:8080` (**changes every time a free-tier tunnel restarts** — update the env var each dev session). On Railway, set it to `https://${{ RAILWAY_PUBLIC_DOMAIN }}` using Railway's reference-variable syntax — it resolves to this service's own stable public domain, so it never needs touching again across redeploys. `VoiceSessionService` appends `/mcp` and only includes the MCP tool in the session config when this is set (so a session can still be started without it, just without patient tools).
+
+## Deployment (Railway)
+
+- `Dockerfile` — multi-stage build using the project's own `./mvnw` (not a Maven base image, so the wrapper-pinned Maven version is what actually builds), `eclipse-temurin:21-jdk-alpine` to build, `eclipse-temurin:21-jre-alpine` to run. Needs `apk add curl` in the build stage — the Maven wrapper script downloads its distribution with curl/wget, and the base image has neither by default.
+- `railway.toml` — `builder = "dockerfile"`; health check hits the existing `GET /api/health` (no Actuator dependency needed/added). Required Railway dashboard env vars are documented in the file's comments: `OPENAI_API_KEY`, `MCP_SERVER_PUBLIC_URL` (see above), optional `CORS_ALLOWED_ORIGINS`.
+- Both the Dockerfile and a built image were actually built and run locally (`docker build` / `docker run`) to confirm the jar name matches, `PORT`/`CORS_ALLOWED_ORIGINS` env vars are honored, and `/api/health` + `/mcp` respond correctly inside the container — not just written and assumed to work.
+- The Angular frontend deploys separately, to Cloudflare Workers (static assets, not this Dockerfile) — see `Angular_Frontend/CLAUDE.md`. The two deploys are independent; each needs to know the other's URL (`CORS_ALLOWED_ORIGINS` here, `environment.prod.ts`'s `apiBaseUrl` there) and neither auto-discovers it.
 
 ## Rules
 

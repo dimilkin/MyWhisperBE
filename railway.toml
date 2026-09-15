@@ -1,0 +1,22 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/api/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+# Required environment variables (set in Railway dashboard, on the backend service):
+# OPENAI_API_KEY        — OpenAI API key with Realtime access. Never commit this.
+# MCP_SERVER_PUBLIC_URL — set to: https://${{ RAILWAY_PUBLIC_DOMAIN }}
+#                          (Railway reference-variable syntax; resolves to this
+#                          service's own public domain, so it never needs manual
+#                          updating across redeploys, unlike an ngrok URL)
+#
+# Optional:
+# CORS_ALLOWED_ORIGINS  — origin of the deployed Angular frontend (Cloudflare Workers,
+#                          not Railway — see Angular_Frontend/wrangler.jsonc), e.g.
+#                          https://dentalwhisper-frontend.<subdomain>.workers.dev
+#                          (defaults to http://localhost:4200 if unset)
